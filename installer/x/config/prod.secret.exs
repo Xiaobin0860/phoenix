@@ -27,3 +27,7 @@ secret_key_base =
 config :x, XWeb.Endpoint,
   http: [:inet6, port: String.to_integer(System.get_env("PORT") || "4000")],
   secret_key_base: secret_key_base
+
+config :x, X.Accounts.Guardian,
+  issuer: "x",
+  secret_key: "4tIRhRYaKgJtNZPMxDu91ly5sQ8Wqs7FKnUjZ4NlvQ0aNon0FG2GxSXnzoke/2Kk"

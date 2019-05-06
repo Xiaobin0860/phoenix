@@ -74,3 +74,7 @@ config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
+
+config :x, X.Accounts.Guardian,
+  issuer: "x",
+  secret_key: "tJ5J6oDNEVmqUgXPSkMRUNSewYItLKCUsDPoxW4kjJ46RVJIeK9IYA6mLg5RBTgD"

@@ -8,6 +8,22 @@ defmodule X.Accounts do
 
   alias X.Accounts.User
 
+  def auth_user(mail, pass) do
+    query = from u in User, where: u.mail == ^mail
+
+    case Repo.one(query) do
+      nil ->
+        {:error, :invalid_credentials}
+
+      user ->
+        if Argon2.verify_pass(pass, user.pass_hash) do
+          {:ok, user}
+        else
+          {:error, :invalid_credentials}
+        end
+    end
+  end
+
   @doc """
   Returns the list of users.
 
@@ -36,6 +52,7 @@ defmodule X.Accounts do
 
   """
   def get_user!(id), do: Repo.get!(User, id)
+  def get_user(id), do: Repo.get(User, id)
 
   @doc """
   Creates a user.

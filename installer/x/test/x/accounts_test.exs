@@ -48,10 +48,13 @@ defmodule X.AccountsTest do
     end
 
     test "create_user/1 with valid data creates a user" do
-      assert {:ok, %User{} = user} = Accounts.create_user(@valid_attrs)
-      assert user.mail == @valid_attrs.mail
-      assert user.nick == @valid_attrs.nick
-      assert true == Argon2.verify_pass(@valid_attrs.pass, user.pass_hash)
+      assert {:ok, %User{} = u} = Accounts.create_user(@valid_attrs)
+      assert u.mail == @valid_attrs.mail
+      assert u.nick == @valid_attrs.nick
+      assert true == Argon2.verify_pass(@valid_attrs.pass, u.pass_hash)
+      u1 = Accounts.get_user!(u.id)
+      assert {:ok, %User{} = u2} = Accounts.auth_user(@valid_attrs.mail, @valid_attrs.pass)
+      assert u2 == u1
     end
 
     test "create_user/1 with invalid data returns error changeset" do
@@ -59,11 +62,14 @@ defmodule X.AccountsTest do
     end
 
     test "update_user/2 with valid data updates the user" do
-      user = user_fixture()
-      assert {:ok, %User{} = user} = Accounts.update_user(user, @update_attrs)
-      assert user.mail == @update_attrs.mail
-      assert user.nick == @update_attrs.nick
-      assert true == Argon2.verify_pass(@update_attrs.pass, user.pass_hash)
+      u = user_fixture()
+      assert {:ok, %User{} = u} = Accounts.update_user(u, @update_attrs)
+      assert u.mail == @update_attrs.mail
+      assert u.nick == @update_attrs.nick
+      assert true == Argon2.verify_pass(@update_attrs.pass, u.pass_hash)
+      u1 = Accounts.get_user!(u.id)
+      assert {:ok, %User{} = u2} = Accounts.auth_user(@update_attrs.mail, @update_attrs.pass)
+      assert u2 == u1
     end
 
     test "update_user/2 with invalid data returns error changeset" do
