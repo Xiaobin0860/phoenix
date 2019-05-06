@@ -20,7 +20,9 @@ defmodule XWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", XWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", XWeb do
+    pipe_through :api
+
+    resources "/users", UserController, except: [:new, :edit]
+  end
 end
