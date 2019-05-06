@@ -6,8 +6,18 @@ defmodule X.AccountsTest do
   describe "users" do
     alias X.Accounts.User
 
-    @valid_attrs %{mail: "some mail", nick: "some nick", pass_hash: "some pass_hash"}
-    @update_attrs %{mail: "some updated mail", nick: "some updated nick", pass_hash: "some updated pass_hash"}
+    @valid_attrs %{
+      mail: "some@mail",
+      nick: "SomeNick",
+      pass: "12345678",
+      pass_confirmation: "12345678"
+    }
+    @update_attrs %{
+      mail: "some@updated.mail",
+      nick: "SomeUpdatedNick",
+      pass: "12345678",
+      pass_confirmation: "12345678"
+    }
     @invalid_attrs %{mail: nil, nick: nil, pass_hash: nil}
 
     def user_fixture(attrs \\ %{}) do
@@ -20,20 +30,28 @@ defmodule X.AccountsTest do
     end
 
     test "list_users/0 returns all users" do
-      user = user_fixture()
-      assert Accounts.list_users() == [user]
+      u1 = user_fixture()
+      [u2] = Accounts.list_users()
+      assert u1.id == u2.id
+      assert u1.mail == u2.mail
+      assert u1.nick == u2.nick
+      assert true == Argon2.verify_pass(u1.pass, u2.pass_hash)
     end
 
     test "get_user!/1 returns the user with given id" do
-      user = user_fixture()
-      assert Accounts.get_user!(user.id) == user
+      u1 = user_fixture()
+      u2 = Accounts.get_user!(u1.id)
+      assert u1.id == u2.id
+      assert u1.mail == u2.mail
+      assert u1.nick == u2.nick
+      assert true == Argon2.verify_pass(u1.pass, u2.pass_hash)
     end
 
     test "create_user/1 with valid data creates a user" do
       assert {:ok, %User{} = user} = Accounts.create_user(@valid_attrs)
-      assert user.mail == "some mail"
-      assert user.nick == "some nick"
-      assert user.pass_hash == "some pass_hash"
+      assert user.mail == @valid_attrs.mail
+      assert user.nick == @valid_attrs.nick
+      assert true == Argon2.verify_pass(@valid_attrs.pass, user.pass_hash)
     end
 
     test "create_user/1 with invalid data returns error changeset" do
@@ -43,15 +61,18 @@ defmodule X.AccountsTest do
     test "update_user/2 with valid data updates the user" do
       user = user_fixture()
       assert {:ok, %User{} = user} = Accounts.update_user(user, @update_attrs)
-      assert user.mail == "some updated mail"
-      assert user.nick == "some updated nick"
-      assert user.pass_hash == "some updated pass_hash"
+      assert user.mail == @update_attrs.mail
+      assert user.nick == @update_attrs.nick
+      assert true == Argon2.verify_pass(@update_attrs.pass, user.pass_hash)
     end
 
     test "update_user/2 with invalid data returns error changeset" do
-      user = user_fixture()
-      assert {:error, %Ecto.Changeset{}} = Accounts.update_user(user, @invalid_attrs)
-      assert user == Accounts.get_user!(user.id)
+      u1 = user_fixture()
+      assert {:error, %Ecto.Changeset{}} = Accounts.update_user(u1, @invalid_attrs)
+      u2 = Accounts.get_user!(u1.id)
+      assert u1.id == u2.id
+      assert u1.mail == u2.mail
+      assert u1.nick == u2.nick
     end
 
     test "delete_user/1 deletes the user" do

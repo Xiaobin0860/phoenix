@@ -11,9 +11,6 @@ defmodule XWeb.UserView do
   end
 
   def render("user.json", %{user: user}) do
-    %{id: user.id,
-      mail: user.mail,
-      pass_hash: user.pass_hash,
-      nick: user.nick}
+    %{id: user.id, mail: user.mail, pass_hash: user.pass_hash, nick: user.nick}
   end
 end

@@ -5,14 +5,16 @@ defmodule XWeb.UserControllerTest do
   alias X.Accounts.User
 
   @create_attrs %{
-    mail: "some mail",
-    nick: "some nick",
-    pass_hash: "some pass_hash"
+    mail: "some@mail",
+    nick: "SomeNick",
+    pass: "12345678",
+    pass_confirmation: "12345678"
   }
   @update_attrs %{
-    mail: "some updated mail",
-    nick: "some updated nick",
-    pass_hash: "some updated pass_hash"
+    mail: "some@updated.mail",
+    nick: "SomeUpdatedNick",
+    pass: "12345678",
+    pass_confirmation: "12345678"
   }
   @invalid_attrs %{mail: nil, nick: nil, pass_hash: nil}
 
@@ -41,10 +43,12 @@ defmodule XWeb.UserControllerTest do
 
       assert %{
                "id" => id,
-               "mail" => "some mail",
-               "nick" => "some nick",
-               "pass_hash" => "some pass_hash"
+               "mail" => mail,
+               "nick" => nick
              } = json_response(conn, 200)["data"]
+
+      assert mail == @create_attrs.mail
+      assert nick == @create_attrs.nick
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
@@ -64,10 +68,12 @@ defmodule XWeb.UserControllerTest do
 
       assert %{
                "id" => id,
-               "mail" => "some updated mail",
-               "nick" => "some updated nick",
-               "pass_hash" => "some updated pass_hash"
+               "mail" => mail,
+               "nick" => nick
              } = json_response(conn, 200)["data"]
+
+      assert mail == @update_attrs.mail
+      assert nick == @update_attrs.nick
     end
 
     test "renders errors when data is invalid", %{conn: conn, user: user} do
