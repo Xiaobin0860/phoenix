@@ -16,7 +16,7 @@ defmodule XWeb.UserControllerTest do
     pass: "12345678",
     pass_confirmation: "12345678"
   }
-  @invalid_attrs %{mail: nil, nick: nil, pass_hash: nil}
+  @invalid_attrs %{mail: nil, nick: nil, pass: nil, pass_confirmation: nil}
 
   def fixture(:user) do
     {:ok, user} = Accounts.create_user(@create_attrs)
@@ -28,24 +28,36 @@ defmodule XWeb.UserControllerTest do
   end
 
   describe "index" do
-    test "lists all users", %{conn: conn} do
+    test "auth error", %{conn: conn} do
       conn = get(conn, Routes.user_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 401)["error"] == "unauthenticated"
     end
   end
 
   describe "create user" do
     test "renders user when data is valid", %{conn: conn} do
-      conn = post(conn, Routes.user_path(conn, :create), user: @create_attrs)
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+      ret = post(conn, Routes.user_path(conn, :create), user: @create_attrs)
 
-      conn = get(conn, Routes.user_path(conn, :show, id))
+      assert %{
+               "id" => id,
+               "mail" => mail,
+               "nick" => nick,
+               "jwt" => jwt
+             } = json_response(ret, 201)["user"]
+
+      assert mail == @create_attrs.mail
+      assert nick == @create_attrs.nick
+
+      ret =
+        conn
+        |> put_req_header("authorization", "Bearer " <> jwt)
+        |> get(Routes.user_path(conn, :show, id))
 
       assert %{
                "id" => id,
                "mail" => mail,
                "nick" => nick
-             } = json_response(conn, 200)["data"]
+             } = json_response(ret, 200)["data"]
 
       assert mail == @create_attrs.mail
       assert nick == @create_attrs.nick
@@ -86,17 +98,15 @@ defmodule XWeb.UserControllerTest do
     setup [:create_user]
 
     test "deletes chosen user", %{conn: conn, user: user} do
-      conn = delete(conn, Routes.user_path(conn, :delete, user))
-      assert response(conn, 204)
-
-      assert_error_sent 404, fn ->
-        get(conn, Routes.user_path(conn, :show, user))
-      end
+      ret = delete(conn, Routes.user_path(conn, :delete, user))
+      assert response(ret, 204)
+      assert_raise Ecto.NoResultsError, fn -> Accounts.get_user!(user.id) end
     end
   end
 
-  defp create_user(_) do
+  defp create_user(%{conn: conn}) do
     user = fixture(:user)
-    {:ok, user: user}
+    {:ok, jwt, _} = Accounts.auth_token(user.mail, user.pass)
+    {:ok, user: user, conn: put_req_header(conn, "authorization", "Bearer " <> jwt)}
   end
 end

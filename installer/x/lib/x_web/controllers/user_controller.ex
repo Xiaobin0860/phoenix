@@ -1,10 +1,20 @@
 defmodule XWeb.UserController do
   use XWeb, :controller
 
+  require Logger
+
   alias X.Accounts
   alias X.Accounts.User
+  alias X.Accounts.Guardian
 
   action_fallback XWeb.FallbackController
+
+  def login(conn, %{"mail" => mail, "pass" => pass}) do
+    with {:ok, %User{} = user} <- Accounts.auth_user(mail, pass),
+         {:ok, token, _claims} <- Guardian.encode_and_sign(user) do
+      conn |> render("user_jwt.json", jwt: token, user: user)
+    end
+  end
 
   def index(conn, _params) do
     users = Accounts.list_users()
@@ -12,11 +22,13 @@ defmodule XWeb.UserController do
   end
 
   def create(conn, %{"user" => user_params}) do
-    with {:ok, %User{} = user} <- Accounts.create_user(user_params) do
+    with {:ok, %User{} = user} <- Accounts.create_user(user_params),
+         {:ok, token, _claims} <- Guardian.encode_and_sign(user) do
+      Logger.debug("create #{inspect user} #{token}")
+
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.user_path(conn, :show, user))
-      |> render("show.json", user: user)
+      |> render("user_jwt.json", jwt: token, user: user)
     end
   end
 

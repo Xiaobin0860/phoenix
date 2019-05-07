@@ -13,6 +13,10 @@ defmodule XWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :jwt_auth do
+    plug XWeb.Pipeline
+  end
+
   scope "/", XWeb do
     pipe_through :browser
 
@@ -23,6 +27,14 @@ defmodule XWeb.Router do
   scope "/api", XWeb do
     pipe_through :api
 
-    resources "/users", UserController, except: [:new, :edit]
+    post "/users", UserController, :create
+    post "/users/login", UserController, :login
+  end
+
+
+  scope "/api", XWeb do
+    pipe_through [:api, :jwt_auth]
+
+    resources "/users", UserController, except: [:new, :edit, :create]
   end
 end

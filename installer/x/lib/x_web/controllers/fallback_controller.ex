@@ -19,4 +19,11 @@ defmodule XWeb.FallbackController do
     |> put_view(XWeb.ErrorView)
     |> render(:"404")
   end
+
+  def auth_error(conn, {type, _reason}, _opts) do
+    conn
+    |> put_status(401)
+    |> put_view(XWeb.ErrorView)
+    |> render("error.json", error: to_string(type))
+  end
 end

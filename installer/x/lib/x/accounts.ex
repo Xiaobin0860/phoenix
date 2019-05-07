@@ -7,19 +7,30 @@ defmodule X.Accounts do
   alias X.Repo
 
   alias X.Accounts.User
+  alias X.Accounts.Guardian
+
+  def auth_token(mail, pass) do
+    case auth_user(mail, pass) do
+      {:ok, user} ->
+        Guardian.encode_and_sign(user)
+
+      _ ->
+        {:error, :unauthorized}
+    end
+  end
 
   def auth_user(mail, pass) do
     query = from u in User, where: u.mail == ^mail
 
     case Repo.one(query) do
       nil ->
-        {:error, :invalid_credentials}
+        {:error, :wrong_mail}
 
       user ->
         if Argon2.verify_pass(pass, user.pass_hash) do
           {:ok, user}
         else
-          {:error, :invalid_credentials}
+          {:error, :wrong_pass}
         end
     end
   end

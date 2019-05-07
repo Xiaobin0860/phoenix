@@ -10,7 +10,15 @@ defmodule XWeb.UserView do
     %{data: render_one(user, UserView, "user.json")}
   end
 
+  def render("user_jwt.json", %{jwt: jwt, user: user}) do
+    %{user: Map.merge(render_one(user, UserView, "user.json"), %{jwt: jwt})}
+  end
+
   def render("user.json", %{user: user}) do
-    %{id: user.id, mail: user.mail, pass_hash: user.pass_hash, nick: user.nick}
+    %{id: user.id, mail: user.mail, nick: user.nick}
+  end
+
+  def render("jwt.json", %{jwt: jwt}) do
+    %{jwt: jwt}
   end
 end
